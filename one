@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Undian Nombor</title>
+</head>
+<body>
+  <h2>Masukkan Nama Anda</h2>
+  <input type="text" id="nama" placeholder="Nama Penuh">
+  <button onclick="submitNama()">Tarik Undi</button>
+  <p id="status"></p>
+
+  <h3>Senarai Nama & Nombor Giliran</h3>
+  <ul id="result"></ul>
+
+  <script>
+    const scriptURL = "https://script.google.com/macros/s/AKfycbxWUR6uveNrp8IUY7UdHlZq2pqRuWzHT5Iqj7iIL_-1sKVLLcAYeBG5TJ_8cYYugcG-dg/exec";
+
+    function submitNama() {
+      let nama = document.getElementById('nama').value;
+      fetch(scriptURL, {
+        method: 'POST',
+        body: new URLSearchParams({ nama: nama })
+      }).then(res => res.text())
+        .then(txt => {
+          document.getElementById('status').innerText = 
+            (txt === "OK") ? "Undian Berjaya!" : "Semua nombor sudah habis.";
+          loadData();
+        });
+    }
+
+    function loadData() {
+      fetch(scriptURL)
+        .then(res => res.json())
+        .then(data => {
+          let list = document.getElementById('result');
+          list.innerHTML = '';
+          for (let i = 1; i < data.length; i++) {
+            list.innerHTML += `<li>${data[i][1]} - ${data[i][0]}</li>`;
+          }
+        });
+    }
+
+    loadData();
+    setInterval(loadData, 3000);
+  </script>
+</body>
+</html>
