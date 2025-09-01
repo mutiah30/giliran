@@ -1,47 +1,95 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Undian Nombor</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 </head>
-<body>
-  <h2>Masukkan Nama Anda</h2>
-  <input type="text" id="nama" placeholder="Nama Penuh">
-  <button onclick="submitNama()">Tarik Undi</button>
-  <p id="status"></p>
+<body class="bg-gray-100 min-h-screen flex flex-col items-center justify-center">
+  
+  <div class="bg-white shadow-lg rounded-2xl p-6 w-full max-w-md">
+    <h1 class="text-2xl font-bold text-center text-blue-600 mb-4">Undian Nombor</h1>
+    
+    <!-- Form -->
+    <form id="undiForm" class="flex flex-col gap-4">
+      <input type="text" id="nama" placeholder="Masukkan nama anda"
+        class="border rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-400" required>
+      <button type="submit" class="bg-blue-600 text-white font-semibold py-3 rounded-lg hover:bg-blue-700">
+        Undi Sekarang
+      </button>
+    </form>
 
-  <h3>Senarai Nama & Nombor Giliran</h3>
-  <ul id="result"></ul>
+    <!-- Hasil Undian -->
+    <div id="hasil" class="text-center text-lg font-semibold text-green-600 mt-4 hidden"></div>
+  </div>
 
+  <!-- Senarai Live -->
+  <div class="bg-white shadow-lg rounded-2xl p-4 w-full max-w-md mt-6">
+    <h2 class="text-xl font-bold text-gray-700 mb-2">Senarai Undian</h2>
+    <ul id="senarai" class="space-y-2 text-gray-800 text-base"></ul>
+  </div>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js"></script>
   <script>
-    const scriptURL = "https://script.google.com/macros/s/AKfycbxWUR6uveNrp8IUY7UdHlZq2pqRuWzHT5Iqj7iIL_-1sKVLLcAYeBG5TJ_8cYYugcG-dg/exec";
+    // Firebase Config
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_PROJECT.firebaseapp.com",
+      databaseURL: "https://YOUR_PROJECT.firebaseio.com",
+      projectId: "YOUR_PROJECT",
+      storageBucket: "YOUR_PROJECT.appspot.com",
+      messagingSenderId: "YOUR_ID",
+      appId: "YOUR_APP_ID"
+    };
 
-    function submitNama() {
-      let nama = document.getElementById('nama').value;
-      fetch(scriptURL, {
-        method: 'POST',
-        body: new URLSearchParams({ nama: nama })
-      }).then(res => res.text())
-        .then(txt => {
-          document.getElementById('status').innerText = 
-            (txt === "OK") ? "Undian Berjaya!" : "Semua nombor sudah habis.";
-          loadData();
-        });
+    const app = firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    const form = document.getElementById('undiForm');
+    const hasilDiv = document.getElementById('hasil');
+    const senaraiUl = document.getElementById('senarai');
+
+    // Generate nombor unik
+    function generateUniqueNumber(existingNumbers) {
+      let num;
+      do {
+        num = Math.floor(Math.random() * 100) + 1; // 1 - 100
+      } while (existingNumbers.includes(num));
+      return num;
     }
 
-    function loadData() {
-      fetch(scriptURL)
-        .then(res => res.json())
-        .then(data => {
-          let list = document.getElementById('result');
-          list.innerHTML = '';
-          for (let i = 1; i < data.length; i++) {
-            list.innerHTML += `<li>${data[i][1]} - ${data[i][0]}</li>`;
-          }
+    // Ambil data sedia ada
+    let existingNumbers = [];
+    db.ref('undi').on('value', snapshot => {
+      const data = snapshot.val();
+      senaraiUl.innerHTML = '';
+      existingNumbers = [];
+      if (data) {
+        Object.values(data).forEach(item => {
+          senaraiUl.innerHTML += `<li class="p-2 bg-gray-100 rounded-lg flex justify-between">
+            <span>${item.nama}</span><span class="font-bold text-blue-600">${item.nombor}</span>
+          </li>`;
+          existingNumbers.push(item.nombor);
         });
-    }
+      }
+    });
 
-    loadData();
-    setInterval(loadData, 3000);
+    // Submit form
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      const nama = document.getElementById('nama').value.trim();
+      if (!nama) return;
+
+      const nombor = generateUniqueNumber(existingNumbers);
+      db.ref('undi').push({ nama, nombor });
+
+      hasilDiv.textContent = `Nombor anda: ${nombor}`;
+      hasilDiv.classList.remove('hidden');
+      form.reset();
+    });
   </script>
 </body>
 </html>
