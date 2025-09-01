@@ -1,32 +1,398 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Cabutan Undi</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sistem Tarik Nombor Giliran</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    rel="stylesheet"
+  />
+  <style>
+    @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap");
+
+    * {
+      font-family: "Poppins", sans-serif;
+    }
+
+    .number-display {
+      transition: all 0.5s ease;
+      transform-style: preserve-3d;
+    }
+
+    .number-animate {
+      animation: spinNumber 1s ease-out;
+    }
+
+    @keyframes spinNumber {
+      0% {
+        transform: rotateX(0deg) scale(0.5);
+        opacity: 0;
+      }
+      100% {
+        transform: rotateX(360deg) scale(1);
+        opacity: 1;
+      }
+    }
+
+    .glow-effect {
+      box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+    }
+
+    .success-toast {
+      animation: slideIn 0.3s ease-out, slideOut 0.3s ease-in 2.7s;
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    @keyframes slideOut {
+      from {
+        transform: translateX(0);
+        opacity: 1;
+      }
+      to {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+    }
+  </style>
 </head>
-<body>
-  <h1>Cabutan Nombor Giliran</h1>
-  <input type="text" id="nama" placeholder="Masukkan Nama">
-  <button onclick="tarikUndi()">Tarik Undi</button>
-  <p id="result"></p>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+  <div class="container mx-auto px-4 py-8">
+    <!-- Header -->
+    <div class="text-center mb-12">
+      <div
+        class="w-24 h-24 mx-auto mb-6 bg-blue-600 rounded-full flex items-center justify-center shadow-lg"
+      >
+        <i class="fas fa-ticket-alt text-white text-4xl"></i>
+      </div>
+      <h1 class="text-4xl font-bold text-gray-800 mb-4">
+        Sistem Tarik Nombor Giliran
+      </h1>
+      <p class="text-gray-600 text-lg">
+        Masukkan nama anda dan tarik nombor giliran secara rawak (1-11)
+      </p>
+    </div>
+
+    <!-- Main Content -->
+    <div
+      class="max-w-md mx-auto bg-white rounded-2xl shadow-xl overflow-hidden"
+    >
+      <!-- Input Form -->
+      <div class="p-8">
+        <div class="mb-6">
+          <label
+            for="studentName"
+            class="block text-sm font-medium text-gray-700 mb-2"
+          >
+            <i class="fas fa-user mr-2 text-blue-600"></i>Nama Pelajar
+          </label>
+          <input
+            type="text"
+            id="studentName"
+            placeholder="Masukkan nama penuh anda"
+            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+          />
+        </div>
+
+        <button
+          id="drawButton"
+          class="w-full bg-gradient-to-r from-blue-600 to-indigo-700 text-white py-3 px-6 rounded-lg font-semibold hover:from-blue-700 hover:to-indigo-800 transition-all duration-200 transform hover:scale-105 shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <i class="fas fa-random mr-2"></i>Tarik Nombor Giliran
+        </button>
+      </div>
+
+      <!-- Result Display -->
+      <div
+        id="resultSection"
+        class="bg-gray-50 p-8 border-t border-gray-200 hidden"
+      >
+        <div class="text-center">
+          <h3 class="text-lg font-semibold text-gray-700 mb-4">
+            <i class="fas fa-check-circle text-green-600 mr-2"></i>Nombor Giliran
+            Anda
+          </h3>
+
+          <div
+            id="numberDisplay"
+            class="number-display w-32 h-32 mx-auto bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white text-5xl font-bold shadow-lg glow-effect"
+          >
+            ?
+          </div>
+
+          <div id="studentInfo" class="mt-6 p-4 bg-blue-50 rounded-lg">
+            <p class="text-gray-700 font-medium">
+              <i class="fas fa-user-graduate text-blue-600 mr-2"></i>
+              <span id="displayName"></span>
+            </p>
+            <p class="text-sm text-gray-500 mt-1">
+              <i class="fas fa-clock text-blue-600 mr-2"></i>
+              <span id="timestamp"></span>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Taken Numbers -->
+    <div class="max-w-md mx-auto mt-8">
+      <div class="bg-white rounded-2xl shadow-xl p-6">
+        <h3
+          class="text-lg font-semibold text-gray-800 mb-4 flex items-center"
+        >
+          <i class="fas fa-list-ol text-purple-600 mr-2"></i>Nombor Yang Sudah
+          Diambil
+        </h3>
+        <div id="takenNumbers" class="flex flex-wrap gap-2">
+          <div
+            class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center text-gray-500 font-medium"
+          >
+            ?
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Instructions -->
+    <div
+      class="max-w-md mx-auto mt-8 bg-yellow-50 border border-yellow-200 rounded-2xl p-6"
+    >
+      <h3 class="text-lg font-semibold text-yellow-800 mb-3 flex items-center">
+        <i class="fas fa-info-circle text-yellow-600 mr-2"></i>Arahan
+      </h3>
+      <ul class="text-yellow-700 text-sm space-y-2">
+        <li class="flex items-start">
+          <i class="fas fa-check-circle text-yellow-600 mt-1 mr-2"></i>
+          Masukkan nama penuh anda sebelum tarik nombor
+        </li>
+        <li class="flex items-start">
+          <i class="fas fa-check-circle text-yellow-600 mt-1 mr-2"></i>
+          Setiap nombor hanya boleh diambil sekali sahaja
+        </li>
+        <li class="flex items-start">
+          <i class="fas fa-check-circle text-yellow-600 mt-1 mr-2"></i>
+          Nombor akan disimpan dalam spreadsheet
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div
+    id="toast"
+    class="fixed top-4 right-4 bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg success-toast hidden"
+  >
+    <i class="fas fa-check-circle mr-2"></i>
+    <span id="toastMessage"></span>
+  </div>
 
   <script>
-    function tarikUndi() {
-      var nama = document.getElementById('nama').value;
-      if (!nama) {
-        alert("Masukkan nama dahulu!");
+    // Configuration - Gantikan dengan URL Web App Google Apps Script kamu
+    const GOOGLE_SHEETS_CONFIG = {
+      scriptURL:
+        "https://script.google.com/macros/s/AKfycbwp30Kg_WeEYqBH-Y538JzI09Xj7aXGozi7Jv79di-Fml33j0wyldf03nSyurPm_VRG/exec",
+      sheetId: "1qapufijRzpdtiynlOCNyU8Q1AbtcEHGHKJXNDILyUi4",
+    };
+
+    // Nombor yang tersedia (1-11)
+    const availableNumbers = Array.from({ length: 11 }, (_, i) => i + 1);
+    let takenNumbers = [];
+    let studentData = [];
+
+    // DOM Elements
+    const studentNameInput = document.getElementById("studentName");
+    const drawButton = document.getElementById("drawButton");
+    const resultSection = document.getElementById("resultSection");
+    const numberDisplay = document.getElementById("numberDisplay");
+    const displayName = document.getElementById("displayName");
+    const timestamp = document.getElementById("timestamp");
+    const takenNumbersContainer = document.getElementById("takenNumbers");
+    const toast = document.getElementById("toast");
+    const toastMessage = document.getElementById("toastMessage");
+
+    // Initialize
+    document.addEventListener("DOMContentLoaded", function () {
+      loadData();
+      updateTakenNumbersDisplay();
+
+      // Add event listeners
+      drawButton.addEventListener("click", handleDrawNumber);
+      studentNameInput.addEventListener("input", validateInput);
+    });
+
+    // Validate input
+    function validateInput() {
+      const name = studentNameInput.value.trim();
+      drawButton.disabled = !name || takenNumbers.length >= 11;
+    }
+
+    // Handle number drawing
+    async function handleDrawNumber() {
+      const name = studentNameInput.value.trim();
+
+      if (!name) {
+        showToast("Sila masukkan nama anda", "error");
         return;
       }
-      
-      fetch("https://script.google.com/macros/s/AKfycbz5KszwfbablYZfaehKQD1_ylbOGHxKCJjOw9GMFAnM2eH94maYlKK61Mx5Nfp-M2viIw/exec", {
-        method: "POST",
-        body: new URLSearchParams({ nama: nama }),
-        headers: { "Content-Type": "application/x-www-form-urlencoded" }
-      })
-      .then(response => response.text())
-      .then(data => {
-        document.getElementById('result').innerText = "Nombor anda: " + data;
-      })
-      .catch(error => console.error(error));
+
+      // Semak sama ada pelajar sudah ambil nombor
+      if (
+        studentData.some(
+          (item) => item.name.toLowerCase() === name.toLowerCase()
+        )
+      ) {
+        showToast("Anda sudah mengambil nombor giliran.", "error");
+        return;
+      }
+
+      if (takenNumbers.length >= 11) {
+        showToast("Semua nombor sudah diambil", "error");
+        return;
+      }
+
+      // Disable button semasa proses
+      drawButton.disabled = true;
+      drawButton.innerHTML =
+        '<i class="fas fa-spinner fa-spin mr-2"></i>Memproses...';
+
+      try {
+        // Dapatkan nombor rawak yang belum diambil
+        const available = availableNumbers.filter(
+          (num) => !takenNumbers.includes(num)
+        );
+        if (available.length === 0) {
+          throw new Error("Tiada nombor tersedia");
+        }
+
+        const randomIndex = Math.floor(Math.random() * available.length);
+        const drawnNumber = available[randomIndex];
+
+        // Simpan ke Google Sheets
+        const success = await saveToDatabase(name, drawnNumber);
+
+        if (success) {
+          // Kemas kini data tempatan
+          takenNumbers.push(drawnNumber);
+          studentData.push({
+            name: name,
+            number: drawnNumber,
+            timestamp: new Date().toLocaleString("ms-MY"),
+          });
+
+          // Papar keputusan
+          displayResult(name, drawnNumber);
+          updateTakenNumbersDisplay();
+          showToast(`Nombor ${drawnNumber} berjaya diambil!`, "success");
+
+          // Reset input
+          studentNameInput.value = "";
+        } else {
+          throw new Error("Gagal menyimpan data");
+        }
+      } catch (error) {
+        console.error("Error:", error);
+        showToast("Ralat: " + error.message, "error");
+      } finally {
+        drawButton.innerHTML =
+          '<i class="fas fa-random mr-2"></i>Tarik Nombor Giliran';
+        validateInput();
+      }
+    }
+
+    // Papar nombor giliran dengan animasi
+    function displayResult(name, number) {
+      displayName.textContent = name;
+      timestamp.textContent = new Date().toLocaleString("ms-MY");
+
+      numberDisplay.textContent = "?";
+      numberDisplay.classList.remove("number-animate");
+
+      setTimeout(() => {
+        numberDisplay.textContent = number;
+        numberDisplay.classList.add("number-animate");
+        resultSection.classList.remove("hidden");
+      }, 500);
+    }
+
+    // Kemas kini paparan nombor yang sudah diambil
+    function updateTakenNumbersDisplay() {
+      takenNumbersContainer.innerHTML = "";
+
+      if (takenNumbers.length === 0) {
+        takenNumbersContainer.innerHTML = `
+          <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center text-gray-500 font-medium">
+            ?
+          </div>
+        `;
+        return;
+      }
+
+      takenNumbers
+        .slice()
+        .sort((a, b) => a - b)
+        .forEach((num) => {
+          const div = document.createElement("div");
+          div.className =
+            "w-10 h-10 bg-green-100 rounded-full flex items-center justify-center text-green-700 font-medium border-2 border-green-300";
+          div.textContent = num;
+          takenNumbersContainer.appendChild(div);
+        });
+    }
+
+    // Papar notifikasi toast
+    function showToast(message, type = "success") {
+      toast.className = `fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg success-toast ${
+        type === "success" ? "bg-green-600" : "bg-red-600"
+      } text-white`;
+      toastMessage.textContent = message;
+      toast.classList.remove("hidden");
+
+      setTimeout(() => {
+        toast.classList.add("hidden");
+      }, 3000);
+    }
+
+    // Muat naik data dari Google Sheets (GET request)
+    async function loadData() {
+      try {
+        const response = await fetch(GOOGLE_SHEETS_CONFIG.scriptURL);
+        const data = await response.json();
+        studentData = data;
+        takenNumbers = data.map((item) => item.number);
+        updateTakenNumbersDisplay();
+        validateInput();
+      } catch (error) {
+        console.error("Failed to load data:", error);
+      }
+    }
+
+    // Simpan data ke Google Sheets (POST request)
+    async function saveToDatabase(name, number) {
+      try {
+        await fetch(GOOGLE_SHEETS_CONFIG.scriptURL, {
+          method: "POST",
+          mode: "no-cors", // Google Apps Script Web App biasanya tak support CORS
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ name, number }),
+        });
+        return true;
+      } catch (error) {
+        console.error("Save failed:", error);
+        return false;
+      }
     }
   </script>
 </body>
