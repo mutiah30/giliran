@@ -1,81 +1,33 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Undian Giliran</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+  <title>Cabutan Undi</title>
 </head>
-<body class="bg-gray-100 flex flex-col items-center min-h-screen p-4">
-    <div class="bg-white shadow-lg rounded-2xl w-full max-w-md p-6">
-        <h1 class="text-2xl font-bold text-center text-blue-600 mb-4">Undian Nombor Giliran</h1>
-        
-        <!-- Form Input Nama -->
-        <form id="voteForm" class="flex flex-col gap-4">
-            <input 
-                type="text" 
-                id="studentName" 
-                placeholder="Masukkan Nama Anda" 
-                class="border rounded-lg p-3 text-gray-700 focus:ring-2 focus:ring-blue-500"
-                required
-            />
-            <button 
-                type="submit" 
-                class="bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition">
-                Tarik Undi
-            </button>
-        </form>
+<body>
+  <h1>Cabutan Nombor Giliran</h1>
+  <input type="text" id="nama" placeholder="Masukkan Nama">
+  <button onclick="tarikUndi()">Tarik Undi</button>
+  <p id="result"></p>
 
-        <!-- Loading indicator -->
-        <p id="loading" class="text-center text-gray-500 mt-3 hidden">Sedang memproses...</p>
-
-        <!-- Result List -->
-        <h2 class="text-lg font-semibold mt-6 mb-2 text-gray-700">Senarai Undian:</h2>
-        <ul id="resultList" class="space-y-2 text-gray-800"></ul>
-    </div>
-
-    <script>
-        const scriptURL = "https://script.google.com/macros/s/AKfycbzq3e4sMmYW7xlfiG8BIVeGPdYRQVyb-U79qAj-zQRLeLP3ScPO7oJng9AEXqYtcaZNyw/exec";
-        const form = document.getElementById("voteForm");
-        const resultList = document.getElementById("resultList");
-        const loadingText = document.getElementById("loading");
-
-        // Submit Form
-        form.addEventListener("submit", async (e) => {
-            e.preventDefault();
-            const name = document.getElementById("studentName").value.trim();
-            if (!name) return;
-
-            loadingText.classList.remove("hidden");
-
-            try {
-                await fetch(scriptURL, {
-                    method: "POST",
-                    body: new URLSearchParams({ name })
-                });
-                document.getElementById("studentName").value = "";
-                await loadResults(); // Refresh senarai
-            } catch (error) {
-                alert("Ada masalah! Cuba lagi.");
-            } finally {
-                loadingText.classList.add("hidden");
-            }
-        });
-
-        // Fetch Result List
-        async function loadResults() {
-            const response = await fetch(scriptURL);
-            const data = await response.json();
-            resultList.innerHTML = "";
-            data.forEach(item => {
-                const li = document.createElement("li");
-                li.className = "p-3 bg-gray-50 rounded-lg shadow";
-                li.textContent = `${item.number}. ${item.name}`;
-                resultList.appendChild(li);
-            });
-        }
-
-        loadResults();
-    </script>
+  <script>
+    function tarikUndi() {
+      var nama = document.getElementById('nama').value;
+      if (!nama) {
+        alert("Masukkan nama dahulu!");
+        return;
+      }
+      
+      fetch("https://script.google.com/macros/s/AKfycbzxuqE8QAbBaqcC3PKEeZYly400iybFDP0o-It2gqEPaJxRjopKiR2CdImJhG3J2PWWiQ/exec", {
+        method: "POST",
+        body: new URLSearchParams({ nama: nama }),
+        headers: { "Content-Type": "application/x-www-form-urlencoded" }
+      })
+      .then(response => response.text())
+      .then(data => {
+        document.getElementById('result').innerText = "Nombor anda: " + data;
+      })
+      .catch(error => console.error(error));
+    }
+  </script>
 </body>
 </html>
